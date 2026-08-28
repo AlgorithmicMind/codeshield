@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }} / Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package with lint and test extras
+        run: pip install -e ".[test,lint]"
+
+      - name: Lint and format check
+        run: ruff check src tests demo.py
+
+      - name: Run unit tests with coverage
+        run: pytest tests -v --cov=src/execution_engine

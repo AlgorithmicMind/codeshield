@@ -1,0 +1,106 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "autonomous-code-execution-engine"
+version = "0.1.0"
+description = "A secure, isolated, and self-healing Python code execution engine powered by uv and AST analysis."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [
+    { name = "Senior Python Core Engineer" },
+]
+keywords = ["code", "execution", "sandbox", "self-healing", "ast", "uv"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "pydantic>=2.0",
+    "tenacity>=8.0",
+]
+
+[project.optional-dependencies]
+lint = [
+    "ruff>=0.5.0",
+]
+test = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+llm = [
+    "google-genai>=0.1.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/example/autonomous-code-execution-engine"
+Repository = "https://github.com/example/autonomous-code-execution-engine"
+Issues = "https://github.com/example/autonomous-code-execution-engine/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/execution_engine"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "--cov=execution_engine --cov-report=term-missing --cov-report=html --strict-markers"
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["src/execution_engine"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+precision = 2
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # Pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true
