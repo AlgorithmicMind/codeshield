@@ -103,7 +103,7 @@ Create a `.env` file from `.env.example`:
 
 ```text
 GEMINI_API_KEY=your_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.7-flash
 ```
 
 ```python
