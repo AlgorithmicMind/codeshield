@@ -1,6 +1,6 @@
 # autonomous-code-execution-engine
 
-[![CI](https://img.shields.io/github/actions/workflow/status/example/autonomous-code-execution-engine/ci.yml?branch=main&label=CI)](https://github.com/example/autonomous-code-execution-engine/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/AlgorithmicMind/autonomous-code-execution-engine/ci.yml?branch=main&label=CI)](https://github.com/AlgorithmicMind/autonomous-code-execution-engine/actions)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
@@ -73,7 +73,7 @@ AST Validation ──► Sandbox Execution ──► Traceback Classification �
 
 ```bash
 # Clone the repository
-git clone https://github.com/example/autonomous-code-execution-engine.git
+git clone https://github.com/AlgorithmicMind/autonomous-code-execution-engine.git
 cd autonomous-code-execution-engine
 
 # With uv (recommended)
@@ -145,7 +145,13 @@ This repository ships the **core execution and healing engine**. For production 
 - **Prometheus/Grafana observability**, RBAC, and signed artifact provenance.
 - **SLA-backed support** and custom agentic architecture consulting.
 
-**Want the production-grade version or a tailored integration for your platform?** [Open an issue](https://github.com/example/autonomous-code-execution-engine/issues) or contact the maintainers to discuss enterprise licensing and technical consulting.
+**Want the production-grade version or a tailored integration for your platform?**
+
+- [Open a GitHub issue](https://github.com/AlgorithmicMind/autonomous-code-execution-engine/issues)
+- [Connect on LinkedIn](https://www.linkedin.com/in/pedro-castejon-jodar/)
+- [Email the team](mailto:contact@algorithmicmind.dev)
+
+We offer enterprise licensing, dedicated onboarding and custom agentic-architecture consulting.
 
 ---
 
