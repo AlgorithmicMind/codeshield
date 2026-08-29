@@ -10,6 +10,7 @@ import subprocess
 import threading
 import time
 from collections.abc import Iterable
+from typing import IO
 
 from codeshield.environment import SandboxError, SandboxManager
 from codeshield.schemas import CodeExecutionRequest, ExecutionResult
@@ -146,7 +147,7 @@ class SubprocessRunner:
         stdout_lines: list[str] = []
         stderr_lines: list[str] = []
 
-        def reader(pipe, sink: list[str]) -> None:
+        def reader(pipe: IO[str], sink: list[str]) -> None:
             """Read lines from a pipe without blocking the main thread."""
             try:
                 for line in pipe:

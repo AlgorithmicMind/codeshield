@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from codeshield import create_code_execution_tool
-from codeshield.loop import SelfHealingEngine
+from codeshield import SelfHealingEngine, create_code_execution_tool
 
 
 def test_tool_returns_stdout_on_success() -> None:

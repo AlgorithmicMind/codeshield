@@ -7,7 +7,7 @@ with a real call to any of the providers shown in the comments.
 
 from __future__ import annotations
 
-from codeshield.loop import SelfHealingEngine
+from codeshield import SelfHealingEngine
 
 
 def mock_frontier_patcher(code: str, diagnosis) -> str | None:
@@ -16,7 +16,7 @@ def mock_frontier_patcher(code: str, diagnosis) -> str | None:
     Replace this function body with a real frontier-model call. Supported
     model identifiers include:
 
-    - ``gpt-5.4-mini`` (OpenAI)
+    - ``gpt-5.6-luna`` (OpenAI)
     - ``claude-sonnet-5`` (Anthropic)
     - ``deepseek-v4-flash`` (DeepSeek)
     - Any Ollama local model (e.g. ``llama3.2``)
@@ -26,7 +26,7 @@ def mock_frontier_patcher(code: str, diagnosis) -> str | None:
         import openai
 
         response = openai.chat.completions.create(
-            model="gpt-5.4-mini",
+            model="gpt-5.6-luna",
             messages=[
                 {
                     "role": "user",

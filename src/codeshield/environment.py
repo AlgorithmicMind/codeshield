@@ -65,7 +65,7 @@ class SandboxManager:
 
     @property
     def workspace_path(self) -> Path:
-        """Alias for the root sandbox workspace directory."""
+        """Alias of :attr:`workspace` used for explicit lifecycle checks."""
         return self._workspace
 
     @property
@@ -200,6 +200,10 @@ class SandboxManager:
     ) -> Path:
         """Write package specifiers to ``workspace/requirements.txt``.
 
+        Args:
+            packages: Package specifiers to write, one per line.
+            file_name: Name of the requirements file inside the workspace.
+
         Returns:
             Path of the written file.
         """
@@ -218,10 +222,12 @@ class SandboxManager:
             logger.warning("Could not remove workspace %s: %s", self._workspace, exc)
 
     def __enter__(self) -> SandboxManager:
+        """Create the virtual environment and return the manager."""
         self.create()
         return self
 
     def __exit__(self, *exc: object) -> None:
+        """Remove the workspace when leaving the context."""
         self.cleanup()
 
     def _resolve_backend(self, backend: str | None) -> str:

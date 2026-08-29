@@ -6,7 +6,7 @@ import os
 
 from dotenv import load_dotenv
 
-from codeshield.loop import SelfHealingEngine
+from codeshield import SelfHealingEngine
 
 
 def main() -> None:

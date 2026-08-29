@@ -34,6 +34,10 @@ class SelfHealingError(RuntimeError):
     """Raised when the self-healing loop cannot complete execution safely."""
 
 
+class ASTSecurityError(SelfHealingError):
+    """Raised when code or a generated patch is blocked by the static AST gate."""
+
+
 class LLMPatchError(RuntimeError):
     """Raised when the LLM patch generator cannot produce a safe correction."""
 
@@ -239,6 +243,8 @@ class SelfHealingEngine:
         Raises:
             SelfHealingError: when the loop exhausts all iterations without a
                 clean result.
+            ASTSecurityError: when the code or a generated patch is blocked by
+                the static AST gate.
         """
         if isinstance(request, str):
             request = CodeExecutionRequest(code=request)
@@ -276,7 +282,7 @@ class SelfHealingEngine:
                 )
                 patched = self._generate_and_validate_patch(request.code, diagnosis)
                 if patched is None:
-                    raise SelfHealingError(
+                    raise ASTSecurityError(
                         f"Static safety violations cannot be auto-patched: {report.violations}"
                     )
                 request = self._apply_patch(request, patched, attempt)
@@ -337,9 +343,21 @@ class SelfHealingEngine:
         proposal: PatchProposal,
         attempt: int,
     ) -> CodeExecutionRequest:
-        """Return a new request with the patched code and an updated file name."""
+        """Return a new request with the patched code and an updated file name.
+
+        Args:
+            request: The request that produced the failing execution.
+            proposal: The AST-validated patch proposal to apply.
+            attempt: Current healing iteration, used to name the patched script.
+
+        Returns:
+            A new ``CodeExecutionRequest`` carrying the patched source.
+
+        Raises:
+            ASTSecurityError: when the proposal failed static AST validation.
+        """
         if not proposal.is_syntax_valid:
-            raise SelfHealingError(
+            raise ASTSecurityError(
                 f"Proposed patch failed AST validation: {proposal.patched_code[:200]}"
             )
 

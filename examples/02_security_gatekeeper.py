@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from codeshield.analyzer import validate_syntax_and_safety
+from codeshield import validate_syntax_and_safety
 
 
 def main() -> None:

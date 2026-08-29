@@ -108,12 +108,18 @@ pip install -e ".[test,lint,llm,dev]"
 ### Offline Usage (No API Key)
 
 ```python
-from codeshield.loop import SelfHealingEngine
+from codeshield import SelfHealingEngine
 
+# The sandbox is created and destroyed automatically on every ``run`` call.
 engine = SelfHealingEngine(use_llm=False)
-with engine:
-    result, diagnosis = engine.run("print('hello world')")
-    print(result.stdout)
+result, diagnosis = engine.run("print('hello world')")
+print(result.stdout)
+
+# Use a ``with`` block to reuse a single sandbox across multiple runs.
+with SelfHealingEngine(use_llm=False) as reusable_engine:
+    first, _ = reusable_engine.run("print(1 + 1)")
+    second, _ = reusable_engine.run("print(2 + 2)")
+    print(first.stdout, second.stdout)
 ```
 
 ### Model-Agnostic Self-Healing (Plug-and-Play)
@@ -121,13 +127,13 @@ with engine:
 CodeShield is not locked into a single LLM. Pass any Python callable as the `patch_generator` to use OpenAI, Anthropic Claude, DeepSeek, Ollama, LiteLLM or your own service:
 
 ```python
-from codeshield.loop import SelfHealingEngine
+from codeshield import SelfHealingEngine
 
 
 def custom_llm_patcher(code: str, diagnosis) -> str:
-    # Compatible with any frontier provider: GPT-5.4, Claude Sonnet 5, DeepSeek V4, Ollama
+    # Compatible with any frontier provider: GPT-5.6, Claude Sonnet 5, DeepSeek V4, Ollama
     response = client.chat.completions.create(
-        model="gpt-5.4-mini",  # or "claude-sonnet-5", "deepseek-v4-flash"
+        model="gpt-5.6-luna",  # or "claude-sonnet-5", "deepseek-v4-flash"
         messages=[
             {
                 "role": "user",
@@ -139,6 +145,11 @@ def custom_llm_patcher(code: str, diagnosis) -> str:
 
 
 engine = SelfHealingEngine(patch_generator=custom_llm_patcher)
+
+# Broken code -> AST gate -> sandbox execution -> traceback classification ->
+# custom patch -> AST re-validation -> re-execution, all in a single call.
+result, diagnosis = engine.run('print("Result: " + 42)')
+print(result.stdout)  # Result: 42
 ```
 
 ### Zero-Config Self-Healing with Gemini Flash
@@ -152,7 +163,8 @@ GEMINI_MODEL=gemini-3.7-flash
 
 ```python
 from dotenv import load_dotenv
-from codeshield.loop import SelfHealingEngine
+
+from codeshield import SelfHealingEngine
 
 load_dotenv()
 
@@ -184,11 +196,38 @@ python -m codeshield run script.py --no-llm     # force local fallback
 ```python
 from codeshield import create_code_execution_tool
 
-# Pass the tool directly to your agent
+# Standard usage: built-in Gemini healing when configured, local heuristic otherwise
 tools = [create_code_execution_tool()]
+
+# Or bring your own model: the patcher is forwarded to the internal engine
+tools = [create_code_execution_tool(patch_generator=custom_llm_patcher)]
 ```
 
 `create_code_execution_tool()` returns a ready-to-register `execute_python_code(code: str) -> str` function. It runs the provided Python in a self-healing sandbox and returns either the stdout or a structured error report with `error_type` and `stderr`.
+
+---
+
+## Public API
+
+Everything is re-exported at the package root, so imports never need internal submodules:
+
+```python
+from codeshield import (
+    ASTSecurityError,
+    CodeExecutionRequest,
+    ErrorDiagnosis,
+    ExecutionResult,
+    SandboxManager,
+    SelfHealingEngine,
+    SelfHealingError,
+    SubprocessRunner,
+    TracebackClassifier,
+    create_code_execution_tool,
+    validate_syntax_and_safety,
+)
+```
+
+`ASTSecurityError` subclasses `SelfHealingError` and is raised whenever the static AST gate blocks either the original snippet or a generated patch.
 
 ---
 
@@ -212,7 +251,7 @@ python examples/05_custom_llm_openai_compatible.py
 
 ## Running Tests & Lint
 
-The suite currently has **53 tests** with **>82% code coverage** on `src/codeshield`.
+The suite currently has **53 tests** with **>83% code coverage** on `src/codeshield`.
 
 ```bash
 ruff check src tests examples

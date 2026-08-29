@@ -33,15 +33,16 @@ def main() -> None:
         "Print the cumulative return and the annualized Sharpe ratio clearly."
     )
 
-    response = client.models.generate_content(
+    # Chats resolve the full automatic function-calling loop and return text.
+    chat = client.chats.create(
         model=model,
-        contents=prompt,
         config=types.GenerateContentConfig(
             tools=[execute_python_code],
             temperature=0.2,
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(),
         ),
     )
+
+    response = chat.send_message(prompt)
 
     print("\n--- Final response ---")
     print(response.text)

@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from codeshield.analyzer import validate_syntax_and_safety
-from codeshield.classifier import TracebackClassifier
-from codeshield.environment import SandboxManager
-from codeshield.loop import SelfHealingEngine, SelfHealingError
-from codeshield.runner import SubprocessRunner
-from codeshield.schemas import (
+from codeshield import (
+    ASTSecurityError,
     ExecutionResult,
+    SandboxManager,
+    SelfHealingEngine,
+    SubprocessRunner,
+    TracebackClassifier,
+    validate_syntax_and_safety,
 )
 
 
@@ -277,5 +278,5 @@ def test_custom_patch_generator_ast_rejection() -> None:
         use_llm=False,
     )
 
-    with pytest.raises(SelfHealingError):
+    with pytest.raises(ASTSecurityError):
         engine.run("print(undefined_value)")

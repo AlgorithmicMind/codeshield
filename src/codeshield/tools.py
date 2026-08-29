@@ -51,9 +51,7 @@ def create_code_execution_tool(
         with _engine:
             try:
                 result, diagnosis = _engine.run(code)
-            except SelfHealingError as exc:
-                return f"error_type: SelfHealingError\nmessage: {exc}"
-            except (SandboxError, SubprocessRunnerError) as exc:
+            except (SelfHealingError, SandboxError, SubprocessRunnerError) as exc:
                 return f"error_type: {type(exc).__name__}\nmessage: {exc}"
 
         if (

@@ -9,15 +9,17 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from codeshield.classifier import TracebackClassifier
-from codeshield.environment import SandboxError, SandboxManager
-from codeshield.loop import (
+from codeshield import (
+    CodeExecutionRequest,
+    ErrorDiagnosis,
     GeminiPatchGenerator,
+    SandboxError,
+    SandboxManager,
     SelfHealingEngine,
     SelfHealingError,
+    SubprocessRunner,
+    TracebackClassifier,
 )
-from codeshield.runner import SubprocessRunner
-from codeshield.schemas import CodeExecutionRequest, ErrorDiagnosis
 
 
 @pytest.fixture
