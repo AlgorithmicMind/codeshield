@@ -156,6 +156,17 @@ python -m codeshield run script.py --llm        # try Gemini self-healing if con
 python -m codeshield run script.py --no-llm     # force local fallback
 ```
 
+## 🤖 Agent Tool Integration (LangChain, CrewAI, Gemini)
+
+```python
+from codeshield import create_code_execution_tool
+
+# Pasa la tool directamente a tu agente
+tools = [create_code_execution_tool()]
+```
+
+`create_code_execution_tool()` returns a ready-to-register `execute_python_code(code: str) -> str` function. It runs the provided Python in a self-healing sandbox and returns either the stdout or a structured error report with `error_type` and `stderr`.
+
 ---
 
 ## Examples
