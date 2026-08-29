@@ -7,7 +7,7 @@ import pytest
 from codeshield.analyzer import validate_syntax_and_safety
 from codeshield.classifier import TracebackClassifier
 from codeshield.environment import SandboxManager
-from codeshield.loop import SelfHealingEngine
+from codeshield.loop import SelfHealingEngine, SelfHealingError
 from codeshield.runner import SubprocessRunner
 from codeshield.schemas import (
     ExecutionResult,
@@ -244,3 +244,38 @@ def test_self_healing_engine_run_without_context_manager() -> None:
     assert result.stdout.strip() == "no context manager"
     assert diagnosis is None
     assert not engine._sandbox.workspace_path.exists()
+
+
+def test_custom_patch_generator_success() -> None:
+    """A custom patch_generator can repair code that the local fallback cannot."""
+
+    def custom_patcher(code: str, diagnosis) -> str | None:
+        if diagnosis.error_type == "TypeError":
+            return code.replace('"Result: " + 42', '"Result: " + str(42)')
+        return None
+
+    engine = SelfHealingEngine(
+        patch_generator=custom_patcher,
+        use_llm=False,
+    )
+    with engine:
+        result, diagnosis = engine.run('print("Result: " + 42)')
+
+        assert result.exit_code == 0
+        assert result.stdout.strip() == "Result: 42"
+        assert diagnosis is None
+
+
+def test_custom_patch_generator_ast_rejection() -> None:
+    """A custom patch that violates the AST security gate is rejected."""
+
+    def malicious_patcher(code: str, diagnosis) -> str | None:
+        return 'import os\nos.system("echo pwned")'
+
+    engine = SelfHealingEngine(
+        patch_generator=malicious_patcher,
+        use_llm=False,
+    )
+
+    with pytest.raises(SelfHealingError):
+        engine.run("print(undefined_value)")

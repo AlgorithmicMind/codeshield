@@ -1,3 +1,4 @@
+# ruff: noqa: UP045
 """Universal agent tool wrapper for CodeShield.
 
 The function returned by ``create_code_execution_tool`` can be registered as a
@@ -9,20 +10,25 @@ stdout or a structured error report.
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Optional
 
 from codeshield.environment import SandboxError
 from codeshield.loop import SelfHealingEngine, SelfHealingError
 from codeshield.runner import SubprocessRunnerError
+from codeshield.schemas import ErrorDiagnosis
 
 
 def create_code_execution_tool(
-    engine: SelfHealingEngine | None = None,
+    engine: Optional[SelfHealingEngine] = None,
+    patch_generator: Optional[Callable[[str, ErrorDiagnosis], Optional[str]]] = None,
 ) -> Callable[[str], str]:
     """Return a drop-in ``execute_python_code(code: str) -> str`` tool.
 
     Args:
         engine: Optional ``SelfHealingEngine`` instance. When ``None``, a fresh
             engine is created for each tool call.
+        patch_generator: Optional custom patcher ``(code, diagnosis) -> patched``
+            forwarded to ``SelfHealingEngine`` when ``engine`` is not provided.
 
     Returns:
         A callable ready to be registered as an agent tool.
@@ -41,7 +47,7 @@ def create_code_execution_tool(
             The stdout of the script if execution succeeds, or a structured
             error report if it fails after all self-healing attempts.
         """
-        _engine = engine or SelfHealingEngine()
+        _engine = engine or SelfHealingEngine(patch_generator=patch_generator)
         with _engine:
             try:
                 result, diagnosis = _engine.run(code)

@@ -122,10 +122,10 @@ CodeShield is not locked into a single LLM. Pass any Python callable as the `pat
 from codeshield.loop import SelfHealingEngine
 
 
-def custom_openai_patcher(code: str, diagnosis) -> str:
-    # Any LLM call (OpenAI, Anthropic, DeepSeek, Ollama, LiteLLM)
+def custom_llm_patcher(code: str, diagnosis) -> str:
+    # Compatible with any frontier provider: GPT-5.4, Claude Sonnet 5, DeepSeek V4, Ollama
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-5.4-mini",  # or "claude-sonnet-5", "deepseek-v4-flash"
         messages=[
             {
                 "role": "user",
@@ -136,7 +136,7 @@ def custom_openai_patcher(code: str, diagnosis) -> str:
     return response.choices[0].message.content
 
 
-engine = SelfHealingEngine(patch_generator=custom_openai_patcher)
+engine = SelfHealingEngine(patch_generator=custom_llm_patcher)
 ```
 
 ### Zero-Config Self-Healing with Gemini Flash
@@ -198,17 +198,19 @@ The `examples/` folder contains ready-to-run recipes that have been executed and
 - `02_security_gatekeeper.py`: AST rejection of unsafe code.
 - `03_llm_healing_workflow.py`: self-healing workflow with an LLM or local fallback.
 - `04_agent_tool_dropin.py`: end-to-end agentic tool-calling workflow with dynamic code generation.
+- `05_custom_llm_openai_compatible.py`: model-agnostic, API-key-free self-healing with a custom `patch_generator`.
 
 ```bash
 python examples/01_basic_sandboxing.py
 python examples/02_security_gatekeeper.py
 python examples/03_llm_healing_workflow.py
 python examples/04_agent_tool_dropin.py
+python examples/05_custom_llm_openai_compatible.py
 ```
 
 ## Running Tests & Lint
 
-The suite currently has **50 tests** with **>82% code coverage** on `src/codeshield`.
+The suite currently has **53 tests** with **>82% code coverage** on `src/codeshield`.
 
 ```bash
 ruff check src tests examples

@@ -1,3 +1,4 @@
+# ruff: noqa: UP045
 """Self-healing execution loop."""
 
 from __future__ import annotations
@@ -7,6 +8,7 @@ import os
 import re
 from collections.abc import Callable
 from pathlib import Path
+from typing import Optional
 
 from codeshield.analyzer import validate_syntax_and_safety
 from codeshield.classifier import TracebackClassifier
@@ -173,7 +175,7 @@ class SelfHealingEngine:
         sandbox: SandboxManager | None = None,
         runner: SubprocessRunner | None = None,
         classifier: TracebackClassifier | None = None,
-        patch_generator: Callable[[str, ErrorDiagnosis], str | None] | None = None,
+        patch_generator: Optional[Callable[[str, ErrorDiagnosis], Optional[str]]] = None,
         gemini_api_key: str | None = None,
         gemini_model: str | None = None,
         use_llm: bool = True,
