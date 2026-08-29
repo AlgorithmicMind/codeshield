@@ -12,7 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 # Parametrizable functions considered dangerous when invoked directly.
-_DANGEROUS_NAMES: frozenset[str] = frozenset({"eval", "exec", "compile"})
+_DANGEROUS_NAMES: frozenset[str] = frozenset({
+    "eval",
+    "exec",
+    "compile",
+    "os.system",
+    "subprocess.call",
+    "subprocess.run",
+    "subprocess.Popen",
+})
 _GENERIC_EXCEPTIONS: frozenset[str] = frozenset({"Exception", "BaseException"})
 
 

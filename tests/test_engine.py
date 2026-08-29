@@ -141,3 +141,94 @@ def test_self_healing_engine_runs_clean_code() -> None:
         assert result.exit_code == 0
         assert result.stdout.strip() == "hello world"
         assert diagnosis is None
+
+
+def test_runner_enforces_timeout(
+    sandbox: SandboxManager,
+    runner: SubprocessRunner,
+) -> None:
+    """A long-running process is terminated when it exceeds its timeout."""
+    sandbox.create()
+    try:
+        code = "import time; time.sleep(60)"
+        result = runner.run(code, timeout=1.0)
+        assert result.timed_out
+        assert result.exit_code != 0
+    finally:
+        sandbox.cleanup()
+
+
+def test_sandbox_venv_backend() -> None:
+    """The venv backend creates an isolated environment without uv."""
+    sandbox = SandboxManager(backend="venv")
+    with sandbox:
+        assert sandbox.python_executable.exists()
+
+
+def test_nested_exec_is_flagged() -> None:
+    """Nested eval/exec calls are still detected by the safety visitor."""
+    code = 'exec("eval(\'1 + 1\')")'
+    report = validate_syntax_and_safety(code)
+    assert not report.is_valid
+    assert any("eval" in v or "exec" in v for v in report.violations)
+
+
+def test_unrecoverable_syntax_error() -> None:
+    """Severely malformed code is caught as a syntax error."""
+    code = "def foo("
+    report = validate_syntax_and_safety(code)
+    assert not report.is_valid
+    assert report.exception is not None
+    assert "SyntaxError" in report.violations[0]
+
+
+def test_dangerous_imported_call_is_flagged() -> None:
+    """Calls to dangerous functions imported from modules are detected."""
+    code = "import os; os.system('echo pwned')"
+    report = validate_syntax_and_safety(code)
+    assert not report.is_valid
+    assert any(
+        "os.system" in v or "system" in v or "dangerous" in v.lower()
+        for v in report.violations
+    )
+
+
+def test_silent_failure_dataframe_empty(
+    sandbox: SandboxManager,
+    runner: SubprocessRunner,
+) -> None:
+    """A zero exit with an empty DataFrame warning is flagged."""
+    sandbox.create()
+    try:
+        code = "print('empty DataFrame')"
+        result = runner.run(code)
+        assert result.exit_code == 0
+        assert result.silent_failure_detected
+    finally:
+        sandbox.cleanup()
+
+
+def test_silent_failure_nan_pattern(
+    sandbox: SandboxManager,
+    runner: SubprocessRunner,
+) -> None:
+    """A zero exit with NaN warnings is flagged."""
+    sandbox.create()
+    try:
+        code = "print('all NaN')"
+        result = runner.run(code)
+        assert result.exit_code == 0
+        assert result.silent_failure_detected
+    finally:
+        sandbox.cleanup()
+
+
+def test_self_healing_engine_fixes_name_error() -> None:
+    """The local fallback heals a missing import NameError."""
+    engine = SelfHealingEngine(use_llm=False)
+    with engine:
+        result, diagnosis = engine.run("print(math.sqrt(16))")
+
+        assert result.exit_code == 0
+        assert result.stdout.strip() == "4.0"
+        assert diagnosis is None

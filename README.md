@@ -44,6 +44,7 @@ The engine parses every snippet with the standard `ast` module and rejects:
 - `SyntaxError`s before execution.
 - Bare `except:` / `except Exception:` / `except BaseException:` handlers.
 - Calls to dangerous parametrizable functions: `eval()`, `exec()`, `compile()`.
+- Calls to system/subprocess primitives: `os.system()`, `subprocess.call()`, `subprocess.run()`, `subprocess.Popen()`.
 
 ### 3. Silent Failure Detection
 
@@ -124,12 +125,39 @@ Run the included demo:
 python demo.py
 ```
 
+### CLI Usage
+
+Execute any Python file directly from the terminal with the built-in CLI:
+
+```bash
+python -m execution_engine run script.py
+python -m execution_engine run script.py --timeout 30
+python -m execution_engine run script.py --llm        # try Gemini self-healing if configured
+python -m execution_engine run script.py --no-llm     # force local fallback
+```
+
 ---
+
+## Examples
+
+The `examples/` folder contains ready-to-run recipes:
+
+- `01_basic_sandboxing.py`: isolated execution with timing measurements.
+- `02_security_gatekeeper.py`: AST rejection of unsafe code.
+- `03_llm_healing_workflow.py`: full self-healing workflow with optional Gemini.
+
+```bash
+python examples/01_basic_sandboxing.py
+python examples/02_security_gatekeeper.py
+python examples/03_llm_healing_workflow.py
+```
 
 ## Running Tests & Lint
 
+The suite currently has **47 tests** with **>82% code coverage** on `src/execution_engine`.
+
 ```bash
-ruff check src tests demo.py
+ruff check src tests examples
 pytest tests -v --cov=src/execution_engine
 ```
 
@@ -149,7 +177,6 @@ This repository ships the **core execution and healing engine**. For production 
 
 - [Open a GitHub issue](https://github.com/AlgorithmicMind/autonomous-code-execution-engine/issues)
 - [Connect on LinkedIn](https://www.linkedin.com/in/pedro-castejon-jodar/)
-- [Email the team](mailto:contact@algorithmicmind.dev)
 
 We offer enterprise licensing, dedicated onboarding and custom agentic-architecture consulting.
 
