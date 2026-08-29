@@ -1,6 +1,6 @@
 # CodeShield: Autonomous Code Execution Engine
 
-[![CI](https://img.shields.io/github/actions/workflow/status/AlgorithmicMind/autonomous-code-execution-engine/ci.yml?branch=main&label=CI)](https://github.com/AlgorithmicMind/autonomous-code-execution-engine/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/AlgorithmicMind/codeshield/ci.yml?branch=main&label=CI)](https://github.com/AlgorithmicMind/codeshield/actions)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
@@ -84,8 +84,8 @@ AST Validation ──► Sandbox Execution ──► Traceback Classification �
 
 ```bash
 # Clone the repository
-git clone https://github.com/AlgorithmicMind/autonomous-code-execution-engine.git
-cd autonomous-code-execution-engine
+git clone https://github.com/AlgorithmicMind/codeshield.git
+cd codeshield
 
 # With uv (recommended)
 uv venv
@@ -195,7 +195,7 @@ This repository ships the **core execution and healing engine**. For production 
 
 **Want the production-grade version or a tailored integration for your platform?**
 
-- [Open a GitHub issue](https://github.com/AlgorithmicMind/autonomous-code-execution-engine/issues)
+- [Open a GitHub issue](https://github.com/AlgorithmicMind/codeshield/issues)
 - [Connect on LinkedIn](https://www.linkedin.com/in/pedro-castejon-jodar/)
 
 We offer enterprise licensing, dedicated onboarding and custom agentic-architecture consulting.
