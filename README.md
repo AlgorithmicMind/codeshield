@@ -4,6 +4,8 @@
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![PyPI](https://img.shields.io/pypi/v/codeshield-runtime.svg)](https://pypi.org/project/codeshield-runtime/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/codeshield-runtime.svg)](https://pypi.org/project/codeshield-runtime/)
 
 > Deterministic, Isolated, and Self-Healing Python Execution Runtime for AI Agents.
 
