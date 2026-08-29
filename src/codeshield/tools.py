@@ -5,9 +5,11 @@ The function returned by ``create_code_execution_tool`` can be registered as a
 tool in any agent framework (LangChain, CrewAI, Google Gen AI, etc.). It runs
 the provided Python source inside a self-healing sandbox and returns either the
 stdout or a structured error report.
-"""
 
-from __future__ import annotations
+Annotations in this module are intentionally *not* postponed: agent SDKs such as
+``google-genai`` introspect ``execute_python_code.__annotations__`` at runtime to
+build the function-calling schema, and string annotations break that conversion.
+"""
 
 from collections.abc import Callable
 from typing import Optional

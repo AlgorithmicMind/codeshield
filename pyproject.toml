@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "codeshield-runtime"
-version = "0.1.2"
+version = "0.1.3"
 description = "A secure, isolated, and self-healing Python code execution engine powered by uv and AST analysis."
 readme = "README.md"
 license = { text = "MIT" }

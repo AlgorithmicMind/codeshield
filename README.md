@@ -238,7 +238,7 @@ The `examples/` folder contains ready-to-run recipes that have been executed and
 - `01_basic_sandboxing.py`: isolated execution with timing measurements.
 - `02_security_gatekeeper.py`: AST rejection of unsafe code.
 - `03_llm_healing_workflow.py`: self-healing workflow with an LLM or local fallback.
-- `04_agent_tool_dropin.py`: end-to-end agentic tool-calling workflow with dynamic code generation.
+- `04_agent_tool_dropin.py`: dual-phase agentic trace, printing agent thought, tool call, sandbox runtime and final answer for both a legitimate analytics round and a security-defense round where the AST gate blocks a shell escape.
 - `05_custom_llm_openai_compatible.py`: model-agnostic, API-key-free self-healing with a custom `patch_generator`.
 
 ```bash
@@ -251,7 +251,7 @@ python examples/05_custom_llm_openai_compatible.py
 
 ## Running Tests & Lint
 
-The suite currently has **53 tests** with **>83% code coverage** on `src/codeshield`.
+The suite currently has **54 tests** with **>83% code coverage** on `src/codeshield`.
 
 ```bash
 ruff check src tests examples

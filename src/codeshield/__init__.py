@@ -3,7 +3,7 @@
 A secure, isolated, and self-healing Python code execution engine.
 """
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 from codeshield.analyzer import validate_syntax_and_safety
 from codeshield.classifier import TracebackClassifier

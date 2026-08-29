@@ -5,6 +5,15 @@ from __future__ import annotations
 from codeshield import SelfHealingEngine, create_code_execution_tool
 
 
+def test_tool_exposes_runtime_type_annotations() -> None:
+    """Agent SDKs build the schema from ``__annotations__``, so they must be types."""
+    tool = create_code_execution_tool()
+
+    assert tool.__name__ == "execute_python_code"
+    assert tool.__annotations__["code"] is str
+    assert tool.__annotations__["return"] is str
+
+
 def test_tool_returns_stdout_on_success() -> None:
     """A clean execution returns the stripped stdout."""
     engine = SelfHealingEngine(use_llm=False)
