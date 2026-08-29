@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "autonomous-code-execution-engine"
+name = "codeshield"
 version = "0.1.0"
 description = "A secure, isolated, and self-healing Python code execution engine powered by uv and AST analysis."
 readme = "README.md"
@@ -43,9 +43,9 @@ llm = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/example/autonomous-code-execution-engine"
-Repository = "https://github.com/example/autonomous-code-execution-engine"
-Issues = "https://github.com/example/autonomous-code-execution-engine/issues"
+Homepage = "https://github.com/AlgorithmicMind/codeshield"
+Repository = "https://github.com/AlgorithmicMind/codeshield"
+Issues = "https://github.com/AlgorithmicMind/codeshield/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/execution_engine"]

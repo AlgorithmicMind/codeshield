@@ -26,8 +26,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install package with lint and test extras
-        run: pip install -e ".[test,lint]"
+      - name: Install package with lint, test and llm extras
+        run: pip install -e ".[test,lint,llm]"
 
       - name: Lint and format check
         run: ruff check src tests demo.py

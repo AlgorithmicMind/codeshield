@@ -291,6 +291,7 @@ def test_gemini_call_gemini_with_fake_client(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """_call_gemini builds the client and returns the raw response."""
+    pytest.importorskip("google.genai")
     from google import genai
     from google.genai import types as genai_types
 
