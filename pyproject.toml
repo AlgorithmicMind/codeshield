@@ -48,7 +48,7 @@ Repository = "https://github.com/AlgorithmicMind/codeshield"
 Issues = "https://github.com/AlgorithmicMind/codeshield/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/execution_engine"]
+packages = ["src/codeshield"]
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -63,14 +63,14 @@ include = [
 minversion = "7.0"
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "--cov=execution_engine --cov-report=term-missing --cov-report=html --strict-markers"
+addopts = "--cov=codeshield --cov-report=term-missing --cov-report=html --strict-markers"
 filterwarnings = [
     "error",
     "ignore::DeprecationWarning",
 ]
 
 [tool.coverage.run]
-source = ["src/execution_engine"]
+source = ["src/codeshield"]
 branch = true
 
 [tool.coverage.report]

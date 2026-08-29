@@ -6,7 +6,7 @@ import ast
 import logging
 from dataclasses import dataclass, field
 
-from execution_engine.schemas import ValidationReport
+from codeshield.schemas import ValidationReport
 
 logger = logging.getLogger(__name__)
 

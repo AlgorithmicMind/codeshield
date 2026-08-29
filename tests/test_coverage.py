@@ -9,15 +9,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from execution_engine.classifier import TracebackClassifier
-from execution_engine.environment import SandboxError, SandboxManager
-from execution_engine.loop import (
+from codeshield.classifier import TracebackClassifier
+from codeshield.environment import SandboxError, SandboxManager
+from codeshield.loop import (
     GeminiPatchGenerator,
     SelfHealingEngine,
     SelfHealingError,
 )
-from execution_engine.runner import SubprocessRunner
-from execution_engine.schemas import CodeExecutionRequest, ErrorDiagnosis
+from codeshield.runner import SubprocessRunner
+from codeshield.schemas import CodeExecutionRequest, ErrorDiagnosis
 
 
 @pytest.fixture
@@ -171,25 +171,25 @@ def test_gemini_patch_generator_unconfigured() -> None:
 
 def test_main_module_entry_point(monkeypatch: pytest.MonkeyPatch) -> None:
     """The package __main__ entry point invokes the CLI and exits cleanly."""
-    monkeypatch.setattr(sys, "argv", ["execution_engine", "--help"])
+    monkeypatch.setattr(sys, "argv", ["codeshield", "--help"])
 
     with pytest.raises(SystemExit) as exc_info:
-        runpy.run_module("execution_engine", run_name="__main__")
+        runpy.run_module("codeshield", run_name="__main__")
 
     assert exc_info.value.code == 0
 
 
 def test_main_module_help_subprocess() -> None:
-    """python -m execution_engine --help exits successfully."""
+    """python -m codeshield --help exits successfully."""
     result = subprocess.run(
-        [sys.executable, "-m", "execution_engine", "--help"],
+        [sys.executable, "-m", "codeshield", "--help"],
         capture_output=True,
         text=True,
         check=False,
     )
 
     assert result.returncode == 0
-    assert "execution_engine" in result.stdout
+    assert "codeshield" in result.stdout
 
 
 def test_gemini_build_prompt() -> None:

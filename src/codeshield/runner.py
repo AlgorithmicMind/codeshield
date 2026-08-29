@@ -11,8 +11,8 @@ import threading
 import time
 from collections.abc import Iterable
 
-from execution_engine.environment import SandboxError, SandboxManager
-from execution_engine.schemas import CodeExecutionRequest, ExecutionResult
+from codeshield.environment import SandboxError, SandboxManager
+from codeshield.schemas import CodeExecutionRequest, ExecutionResult
 
 logger = logging.getLogger(__name__)
 

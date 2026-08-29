@@ -7,7 +7,7 @@ import logging
 import sys
 from pathlib import Path
 
-from execution_engine.loop import SelfHealingEngine
+from codeshield.loop import SelfHealingEngine
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 def _build_parser() -> argparse.ArgumentParser:
     """Return the argument parser for the CLI."""
     parser = argparse.ArgumentParser(
-        prog="execution_engine",
+        prog="codeshield",
         description="Deterministic, isolated, and self-healing Python code execution.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)

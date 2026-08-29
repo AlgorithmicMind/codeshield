@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import time
 
-from execution_engine.environment import SandboxManager
-from execution_engine.runner import SubprocessRunner
-from execution_engine.schemas import CodeExecutionRequest
+from codeshield.environment import SandboxManager
+from codeshield.runner import SubprocessRunner
+from codeshield.schemas import CodeExecutionRequest
 
 
 def main() -> None:

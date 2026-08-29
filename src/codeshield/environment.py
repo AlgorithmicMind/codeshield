@@ -49,7 +49,7 @@ class SandboxManager:
         self._workspace = (
             Path(workspace)
             if workspace
-            else Path(tempfile.mkdtemp(prefix="execution_engine_"))
+            else Path(tempfile.mkdtemp(prefix="codeshield_"))
         )
         self._venv_name = venv_name
         self._python = python or sys.executable

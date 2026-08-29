@@ -7,7 +7,7 @@ import os
 
 from dotenv import load_dotenv
 
-from execution_engine.loop import SelfHealingEngine
+from codeshield.loop import SelfHealingEngine
 
 load_dotenv()
 

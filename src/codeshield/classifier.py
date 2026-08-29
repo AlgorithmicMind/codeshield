@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import re
 
-from execution_engine.schemas import ErrorDiagnosis
+from codeshield.schemas import ErrorDiagnosis
 
 logger = logging.getLogger(__name__)
 

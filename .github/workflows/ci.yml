@@ -33,4 +33,4 @@ jobs:
         run: ruff check src tests demo.py
 
       - name: Run unit tests with coverage
-        run: pytest tests -v --cov=src/execution_engine
+        run: pytest tests -v --cov=src/codeshield

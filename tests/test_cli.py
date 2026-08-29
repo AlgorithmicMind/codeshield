@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from execution_engine.cli import main
+from codeshield.cli import main
 
 
 def test_cli_runs_clean_file(tmp_path: Path) -> None:

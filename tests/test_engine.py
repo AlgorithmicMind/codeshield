@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from execution_engine.analyzer import validate_syntax_and_safety
-from execution_engine.classifier import TracebackClassifier
-from execution_engine.environment import SandboxManager
-from execution_engine.loop import SelfHealingEngine
-from execution_engine.runner import SubprocessRunner
-from execution_engine.schemas import (
+from codeshield.analyzer import validate_syntax_and_safety
+from codeshield.classifier import TracebackClassifier
+from codeshield.environment import SandboxManager
+from codeshield.loop import SelfHealingEngine
+from codeshield.runner import SubprocessRunner
+from codeshield.schemas import (
     ExecutionResult,
 )
 

@@ -100,7 +100,7 @@ pip install -e ".[test,lint,llm]"
 ### Offline Usage (No API Key)
 
 ```python
-from execution_engine.loop import SelfHealingEngine
+from codeshield.loop import SelfHealingEngine
 
 engine = SelfHealingEngine(use_llm=False)
 with engine:
@@ -119,7 +119,7 @@ GEMINI_MODEL=gemini-3.7-flash
 
 ```python
 from dotenv import load_dotenv
-from execution_engine.loop import SelfHealingEngine
+from codeshield.loop import SelfHealingEngine
 
 load_dotenv()
 
@@ -150,10 +150,10 @@ python examples/03_llm_healing_workflow.py  # self-healing with Gemini or local 
 Execute any Python file directly from the terminal with the built-in CLI:
 
 ```bash
-python -m execution_engine run script.py
-python -m execution_engine run script.py --timeout 30
-python -m execution_engine run script.py --llm        # try Gemini self-healing if configured
-python -m execution_engine run script.py --no-llm     # force local fallback
+python -m codeshield run script.py
+python -m codeshield run script.py --timeout 30
+python -m codeshield run script.py --llm        # try Gemini self-healing if configured
+python -m codeshield run script.py --no-llm     # force local fallback
 ```
 
 ---
@@ -174,11 +174,11 @@ python examples/03_llm_healing_workflow.py
 
 ## Running Tests & Lint
 
-The suite currently has **47 tests** with **>82% code coverage** on `src/execution_engine`.
+The suite currently has **47 tests** with **>82% code coverage** on `src/codeshield`.
 
 ```bash
 ruff check src tests examples
-pytest tests -v --cov=src/execution_engine
+pytest tests -v --cov=src/codeshield
 ```
 
 ---
