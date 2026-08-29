@@ -129,20 +129,35 @@ with engine:
     print(result.stdout)  # Result: 42
 ```
 
+### Using Custom LLM Providers (OpenAI, Anthropic, Ollama)
+
+You are not locked into Gemini. Pass any Python callable as the `patch_generator` to use OpenAI, Anthropic, Ollama, LiteLLM or any other model:
+
+```python
+from codeshield.loop import SelfHealingEngine
+
+
+def custom_openai_patcher(code: str, diagnosis) -> str:
+    # Any LLM call (OpenAI, Anthropic, Ollama, LiteLLM)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "user",
+                "content": f"Fix this code:\n{code}\nError: {diagnosis.message}",
+            }
+        ],
+    )
+    return response.choices[0].message.content
+
+
+engine = SelfHealingEngine(patch_generator=custom_openai_patcher)
+```
+
 Run the included demo:
 
 ```bash
 python demo.py
-```
-
-### Verified Example Workflows
-
-The `examples/` directory contains self-contained recipes that have been executed and verified:
-
-```bash
-python examples/01_basic_sandboxing.py      # isolated execution with timing
-python examples/02_security_gatekeeper.py   # AST rejection of unsafe code
-python examples/03_llm_healing_workflow.py  # self-healing with Gemini or local fallback
 ```
 
 ### CLI Usage
@@ -161,7 +176,7 @@ python -m codeshield run script.py --no-llm     # force local fallback
 ```python
 from codeshield import create_code_execution_tool
 
-# Pasa la tool directamente a tu agente
+# Pass the tool directly to your agent
 tools = [create_code_execution_tool()]
 ```
 
@@ -169,23 +184,25 @@ tools = [create_code_execution_tool()]
 
 ---
 
-## Examples
+## Verified Examples
 
-The `examples/` folder contains ready-to-run recipes:
+The `examples/` folder contains ready-to-run recipes that have been executed and verified:
 
 - `01_basic_sandboxing.py`: isolated execution with timing measurements.
 - `02_security_gatekeeper.py`: AST rejection of unsafe code.
-- `03_llm_healing_workflow.py`: full self-healing workflow with optional Gemini.
+- `03_llm_healing_workflow.py`: self-healing workflow with Gemini or local fallback.
+- `04_agent_tool_dropin.py`: end-to-end agentic tool-calling workflow with dynamic code generation.
 
 ```bash
 python examples/01_basic_sandboxing.py
 python examples/02_security_gatekeeper.py
 python examples/03_llm_healing_workflow.py
+python examples/04_agent_tool_dropin.py
 ```
 
 ## Running Tests & Lint
 
-The suite currently has **47 tests** with **>82% code coverage** on `src/codeshield`.
+The suite currently has **50 tests** with **>82% code coverage** on `src/codeshield`.
 
 ```bash
 ruff check src tests examples
