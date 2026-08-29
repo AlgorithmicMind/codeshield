@@ -123,6 +123,9 @@ class GeminiPatchGenerator:
             config=types.GenerateContentConfig(
                 temperature=0.2,
                 max_output_tokens=2048,
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                    disable=True
+                ),
             ),
         )
 

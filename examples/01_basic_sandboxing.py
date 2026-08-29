@@ -12,6 +12,7 @@ from execution_engine.schemas import CodeExecutionRequest
 def main() -> None:
     code = """
 import math
+import time
 start = time.time()
 result = math.factorial(50)
 print(f"50! = {result}")
