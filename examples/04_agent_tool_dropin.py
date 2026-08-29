@@ -1,24 +1,31 @@
 """Example 4: real-world agentic function calling with CodeShield + Gemini.
 
-Two didactic rounds are executed, printing a staged trace of every hop:
+The integration itself is only three statements -- everything else in this file
+exists to *print* what normally stays invisible::
+
+    execute_python_code = create_code_execution_tool()
+    chat = client.chats.create(
+        model=model,
+        config=types.GenerateContentConfig(tools=[execute_python_code]),
+    )
+    print(chat.send_message(prompt).text)
+
+Automatic function calling (the SDK default for plain Python callables) handles
+the call/response cycle, so no manual protocol loop is needed.
+
+Two rounds are played:
 
 1. **Legitimate Analytics**: the agent reasons, writes a financial computation,
    clears the AST gate and executes it inside the ephemeral uv sandbox.
-2. **Security Defense**: the agent is pushed towards a dangerous primitive, the
-   AST gate blocks it before execution, and the structured error is fed back to
-   the agent so it can rectify with a safe snippet.
+2. **Security Defense**: the agent tries a shell escape, the AST gate blocks it
+   before execution, and the structured error is fed back so it rectifies.
 
-Stages printed: ``[USER PROMPT]``, ``[AGENT THOUGHT]``,
-``[AGENT DECISION & TOOL CALL]``, ``[CODESHIELD SANDBOX RUNTIME]`` and
-``[FINAL AGENT RESPONSE]``.
+Each round prints, in chronological order: ``[USER PROMPT]``,
+``[AGENT THOUGHT]``, ``[AGENT DECISION & TOOL CALL]``,
+``[CODESHIELD SANDBOX RUNTIME]`` and ``[FINAL AGENT RESPONSE]``.
 
-The function-calling loop is driven manually (automatic function calling is
-disabled) so that the intermediate ``candidates[0].content.parts`` -- the
-model's reasoning text and its ``function_call`` parts -- can be inspected and
-printed stage by stage.
-
-Without ``GEMINI_API_KEY`` the script replays both rounds offline against the
-very same sandbox using pre-recorded snippets, so it never fails in CI.
+Without ``GEMINI_API_KEY`` both rounds are replayed offline against the very
+same sandbox with pre-recorded snippets, so the script never fails in CI.
 """
 
 import os
@@ -37,8 +44,6 @@ try:  # ``google-genai`` ships in the optional ``llm`` extra.
     GENAI_AVAILABLE = True
 except ImportError:
     GENAI_AVAILABLE = False
-
-MAX_TURNS = 5
 
 ROUND_1_PROMPT = (
     "Calculate the cumulative return and the annualized Sharpe Ratio "
@@ -98,16 +103,19 @@ def _indent(text: str) -> str:
     return "\n".join(f"    {line}" for line in text.strip().splitlines())
 
 
-def build_traced_tool() -> Callable[[str], str]:
-    """Return the CodeShield tool wrapped with pipeline tracing.
+def build_traced_tool(reports: list[str]) -> Callable[[str], str]:
+    """Return the CodeShield tool, recording one sandbox report per call.
 
-    The wrapper enforces the deterministic AST gate *before* touching the
-    sandbox, so unsafe snippets never reach execution and the agent receives a
-    structured error it can act upon. Every invocation prints the tool call and
-    the sandbox runtime report.
+    The AST gate runs *before* the sandbox, so unsafe snippets never reach
+    execution and the agent receives a structured error it can act upon.
+    Reports are buffered instead of printed so the trace can be replayed in
+    chronological order next to the model's reasoning.
+
+    Args:
+        reports: Sink that receives one rendered report per tool call.
 
     Returns:
-        A traced ``execute_python_code(code: str) -> str`` callable.
+        An ``execute_python_code(code: str) -> str`` callable for the SDK.
     """
     tool = create_code_execution_tool()
 
@@ -124,52 +132,130 @@ def build_traced_tool() -> Callable[[str], str]:
             The stdout of the script if execution succeeds, or a structured
             error report if the AST gate blocks it or it fails at runtime.
         """
-        _stage("🤖 [AGENT DECISION & TOOL CALL]")
-        print("  function: execute_python_code")
-        print("  generated snippet:")
-        print(_indent(code))
+        validation = validate_syntax_and_safety(code)
 
-        report = validate_syntax_and_safety(code)
-        if not report.is_valid:
+        if not validation.is_valid:
             payload = "\n".join(
                 [
                     "error_type: ASTSecurityError",
                     "message: the static security gate rejected this snippet",
-                    *(f"violation: {violation}" for violation in report.violations),
+                    *(f"violation: {item}" for item in validation.violations),
                 ]
             )
-
-            _stage("🛡️  [CODESHIELD SANDBOX RUNTIME]")
-            print("  AST_GATE: BLOCKED")
-            for violation in report.violations:
-                print(f"    - {violation}")
-            print("  STATUS: BLOCKED (error_diagnosis returned, nothing was executed)")
-            print("  payload returned to the agent:")
-            print(_indent(payload))
+            reports.append(
+                "\n".join(
+                    [
+                        "  AST_GATE: BLOCKED",
+                        *(f"    - {item}" for item in validation.violations),
+                        "  STATUS: BLOCKED (nothing was executed)",
+                        "  payload returned to the agent:",
+                        _indent(payload),
+                    ]
+                )
+            )
             return payload
 
         start = time.perf_counter()
         output = tool(code)
         elapsed = time.perf_counter() - start
-        failed = "error_type:" in output or output.startswith("The Python script did not")
+        failed = "error_type:" in output
+        status = "FAILED (stderr / error_diagnosis)" if failed else "SUCCESS (stdout)"
 
-        _stage("🛡️  [CODESHIELD SANDBOX RUNTIME]")
-        print("  AST_GATE: PASSED")
-        print(f"  duration: {elapsed:.3f}s (includes ephemeral venv creation)")
-        if failed:
-            print("  STATUS: FAILED (stderr / error_diagnosis)")
-        else:
-            print("  STATUS: SUCCESS (stdout)")
-        print("  sandbox output:")
-        print(_indent(output))
-
+        reports.append(
+            "\n".join(
+                [
+                    "  AST_GATE: PASSED",
+                    f"  duration: {elapsed:.3f}s (includes ephemeral venv creation)",
+                    f"  STATUS: {status}",
+                    "  sandbox output:",
+                    _indent(output),
+                ]
+            )
+        )
         return output
 
     return execute_python_code
 
 
-def run_offline_rounds(execute_python_code: Callable[[str], str]) -> None:
+def _print_tool_call(code: str, report: str) -> None:
+    """Print the tool call and its buffered sandbox report."""
+    _stage("🤖 [AGENT DECISION & TOOL CALL]")
+    print("  function: execute_python_code")
+    print("  generated snippet:")
+    print(_indent(code))
+
+    _stage("🛡️  [CODESHIELD SANDBOX RUNTIME]")
+    print(report)
+
+
+def print_trace(history: list, reports: list[str]) -> None:
+    """Replay one round chronologically from the chat history.
+
+    Automatic function calling already resolved the cycle, so the history holds
+    the model's reasoning text and its ``function_call`` parts in order; the
+    matching sandbox reports are popped from ``reports``.
+
+    Args:
+        history: Entries returned by ``chat.get_history()``.
+        reports: Sandbox reports recorded by the traced tool, in call order.
+    """
+    pending = list(reports)
+    turns = [entry for entry in history if entry.role == "model"]
+
+    for entry in turns[:-1]:  # the last model turn is the final answer
+        for part in entry.parts or []:
+            if part.text and part.text.strip():
+                _stage("🧠 [AGENT THOUGHT]")
+                print(_indent(part.text))
+            elif part.function_call is not None and pending:
+                code = str(part.function_call.args.get("code", ""))
+                _print_tool_call(code, pending.pop(0))
+
+
+def run_round(client: "genai.Client", model: str, title: str, prompt: str) -> None:
+    """Run one round with automatic function calling and print its trace.
+
+    Args:
+        client: Configured Gen AI client.
+        model: Model identifier to query.
+        title: Round label used in the banners.
+        prompt: The user request that opens the round.
+    """
+    reports: list[str] = []
+    execute_python_code = build_traced_tool(reports)
+
+    chat = client.chats.create(
+        model=model,
+        config=types.GenerateContentConfig(
+            tools=[execute_python_code],
+            temperature=0.2,
+        ),
+    )
+
+    _stage(f"🟢 [USER PROMPT] {title}")
+    print(_indent(prompt))
+
+    response = chat.send_message(prompt)
+
+    print_trace(chat.get_history(), reports)
+
+    _stage(f"💡 [FINAL AGENT RESPONSE] {title}")
+    print(_indent(response.text or "(the model returned no text part)"))
+
+
+def run_offline_rounds() -> None:
     """Replay both rounds without an API key using pre-recorded snippets."""
+    reports: list[str] = []
+    execute_python_code = build_traced_tool(reports)
+
+    def replay(thought: str, snippet: str) -> str:
+        """Run one pre-recorded tool call and print its stages."""
+        _stage("🧠 [AGENT THOUGHT] (pre-recorded)")
+        print(_indent(thought))
+        output = execute_python_code(snippet)
+        _print_tool_call(snippet, reports.pop())
+        return output
+
     _stage("⚠️  [OFFLINE MODE]")
     if GENAI_AVAILABLE:
         print("  GEMINI_API_KEY is not set, so no model is queried.")
@@ -183,118 +269,25 @@ def run_offline_rounds(execute_python_code: Callable[[str], str]) -> None:
 
     _stage("🟢 [USER PROMPT] Round 1/2 - Legitimate Analytics")
     print(_indent(ROUND_1_PROMPT))
-    _stage("🧠 [AGENT THOUGHT] (pre-recorded)")
-    print("  Compound the daily returns, then annualize the excess-return")
-    print("  Sharpe ratio with sqrt(252). Standard library is enough.")
-    legit_output = execute_python_code(OFFLINE_LEGIT_SNIPPET)
-    _stage("💡 [FINAL AGENT RESPONSE] Round 1/2")
-    print("  (simulated synthesis from the sandbox output)")
-    print(_indent(legit_output))
+    analytics = replay(
+        "Compound the daily returns, then annualize the excess-return Sharpe\n"
+        "ratio with sqrt(252). The standard library is enough.",
+        OFFLINE_LEGIT_SNIPPET,
+    )
+    _stage("💡 [FINAL AGENT RESPONSE] Round 1/2 - Legitimate Analytics")
+    print(_indent(analytics))
 
     _stage("🟢 [USER PROMPT] Round 2/2 - Security Defense & AST Gate")
     print(_indent(ROUND_2_PROMPT))
-    _stage("🧠 [AGENT THOUGHT] (pre-recorded)")
-    print("  Run the requested shell-escape snippet to probe the backend.")
-    execute_python_code(OFFLINE_UNSAFE_SNIPPET)
-    _stage("🧠 [AGENT THOUGHT] (pre-recorded)")
-    print("  The gate blocked os.system(). Rectifying with a safe equivalent.")
-    rectified_output = execute_python_code(OFFLINE_RECTIFIED_SNIPPET)
-    _stage("💡 [FINAL AGENT RESPONSE] Round 2/2")
-    print("  (simulated synthesis) The shell escape was intercepted by the AST")
-    print("  gate and never executed; the safe rewrite ran successfully.")
-    print(_indent(rectified_output))
-
-
-def _build_config() -> "types.GenerateContentConfig":
-    """Return the Gen AI config declaring the CodeShield tool.
-
-    Automatic function calling is disabled on purpose: the manual loop needs
-    access to the raw ``function_call`` parts to print the trace.
-
-    Returns:
-        A ``GenerateContentConfig`` with the ``execute_python_code`` declaration.
-    """
-    declaration = types.FunctionDeclaration(
-        name="execute_python_code",
-        description=(
-            "Execute a Python script inside an isolated, self-healing CodeShield "
-            "sandbox and return its stdout, or a structured error report when the "
-            "AST security gate blocks it or the script fails."
-        ),
-        parameters=types.Schema(
-            type=types.Type.OBJECT,
-            properties={
-                "code": types.Schema(
-                    type=types.Type.STRING,
-                    description="A valid Python script to execute.",
-                ),
-            },
-            required=["code"],
-        ),
+    replay("Probe the backend with the requested shell escape.", OFFLINE_UNSAFE_SNIPPET)
+    rectified = replay(
+        "The gate blocked os.system() and nothing ran. Rectifying with a safe\nequivalent.",
+        OFFLINE_RECTIFIED_SNIPPET,
     )
-
-    return types.GenerateContentConfig(
-        tools=[types.Tool(function_declarations=[declaration])],
-        temperature=0.2,
-        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-    )
-
-
-def run_round(
-    client: "genai.Client",
-    model: str,
-    title: str,
-    prompt: str,
-    execute_python_code: Callable[[str], str],
-) -> None:
-    """Drive one manual function-calling round and print every stage.
-
-    Args:
-        client: Configured Gen AI client.
-        model: Model identifier to query.
-        title: Human-readable round label used in the banners.
-        prompt: The user request that opens the round.
-        execute_python_code: The traced CodeShield tool.
-    """
-    _stage(f"🟢 [USER PROMPT] {title}")
-    print(_indent(prompt))
-
-    config = _build_config()
-    contents = [types.Content(role="user", parts=[types.Part(text=prompt)])]
-
-    for turn in range(1, MAX_TURNS + 1):
-        response = client.models.generate_content(
-            model=model,
-            contents=contents,
-            config=config,
-        )
-
-        candidate = response.candidates[0]
-        parts = candidate.content.parts or []
-        thoughts = [part.text.strip() for part in parts if part.text]
-        calls = [part.function_call for part in parts if part.function_call is not None]
-
-        if thoughts and calls:
-            _stage(f"🧠 [AGENT THOUGHT] turn {turn}")
-            print(_indent("\n".join(thoughts)))
-
-        if not calls:
-            _stage(f"💡 [FINAL AGENT RESPONSE] {title}")
-            print(_indent("\n".join(thoughts) or "(the model returned no text part)"))
-            return
-
-        contents.append(candidate.content)
-        response_parts = [
-            types.Part.from_function_response(
-                name=call.name,
-                response={"result": execute_python_code(str(call.args.get("code", "")))},
-            )
-            for call in calls
-        ]
-        contents.append(types.Content(role="user", parts=response_parts))
-
-    _stage(f"💡 [FINAL AGENT RESPONSE] {title}")
-    print(f"  The agent did not settle within {MAX_TURNS} turns.")
+    _stage("💡 [FINAL AGENT RESPONSE] Round 2/2 - Security Defense & AST Gate")
+    print("  The shell escape was intercepted before execution; the safe")
+    print("  rewrite then ran successfully and returned:")
+    print(_indent(rectified))
 
 
 def main() -> None:
@@ -302,29 +295,16 @@ def main() -> None:
 
     api_key = os.environ.get("GEMINI_API_KEY")
     model = os.environ.get("GEMINI_MODEL", "gemini-3.7-flash")
-    execute_python_code = build_traced_tool()
 
     if not api_key or not GENAI_AVAILABLE:
-        run_offline_rounds(execute_python_code)
+        run_offline_rounds()
         return
 
     print(f"\n  model: {model}")
     client = genai.Client(api_key=api_key)
 
-    run_round(
-        client,
-        model,
-        "Round 1/2 - Legitimate Analytics",
-        ROUND_1_PROMPT,
-        execute_python_code,
-    )
-    run_round(
-        client,
-        model,
-        "Round 2/2 - Security Defense & AST Gate",
-        ROUND_2_PROMPT,
-        execute_python_code,
-    )
+    run_round(client, model, "Round 1/2 - Legitimate Analytics", ROUND_1_PROMPT)
+    run_round(client, model, "Round 2/2 - Security Defense & AST Gate", ROUND_2_PROMPT)
 
 
 if __name__ == "__main__":
