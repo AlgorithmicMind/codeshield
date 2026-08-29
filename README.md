@@ -205,22 +205,7 @@ tools = [create_code_execution_tool(patch_generator=custom_llm_patcher)]
 
 `create_code_execution_tool()` returns a ready-to-register `execute_python_code(code: str) -> str` function. It runs the provided Python in a self-healing sandbox and returns either the stdout or a structured error report with `error_type` and `stderr`.
 
-The callable exposes real type hints and a Google-style docstring, so SDKs that build their schema by introspection accept it directly. With the Google Gen AI SDK, automatic function calling resolves the whole cycle:
-
-```python
-from google import genai
-from google.genai import types
-
-from codeshield import create_code_execution_tool
-
-client = genai.Client(api_key="...")
-chat = client.chats.create(
-    model="gemini-3.7-flash",
-    config=types.GenerateContentConfig(tools=[create_code_execution_tool()]),
-)
-
-print(chat.send_message("Compute the Sharpe ratio of [0.01, -0.005, 0.02].").text)
-```
+The callable exposes real type hints and a Google-style docstring, so any SDK that builds a function schema from a plain Python callable can register it directly.
 
 ---
 
