@@ -224,6 +224,9 @@ class SelfHealingEngine:
     ) -> tuple[ExecutionResult, ErrorDiagnosis | None]:
         """Run code through the AST -> sandbox -> heal loop.
 
+        The sandbox is created automatically if ``run`` is called outside a
+        ``with`` context manager and is cleaned up once execution finishes.
+
         Args:
             request: Either a ``CodeExecutionRequest`` or a raw source string.
             timeout: Optional execution timeout override.
@@ -238,6 +241,22 @@ class SelfHealingEngine:
         if isinstance(request, str):
             request = CodeExecutionRequest(code=request)
 
+        auto_created = not self._sandbox.python_executable.exists()
+        if auto_created:
+            self._sandbox.create()
+
+        try:
+            return self._run_loop(request, timeout)
+        finally:
+            if auto_created:
+                self._sandbox.cleanup()
+
+    def _run_loop(
+        self,
+        request: CodeExecutionRequest,
+        timeout: float | None,
+    ) -> tuple[ExecutionResult, ErrorDiagnosis | None]:
+        """Execute the AST -> sandbox -> heal loop assuming the sandbox exists."""
         diagnosis: ErrorDiagnosis | None = None
         for attempt in range(1, self._max_iterations + 1):
             logger.info("Self-healing iteration %d/%d", attempt, self._max_iterations)

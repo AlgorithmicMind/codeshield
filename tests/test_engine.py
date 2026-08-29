@@ -232,3 +232,15 @@ def test_self_healing_engine_fixes_name_error() -> None:
         assert result.exit_code == 0
         assert result.stdout.strip() == "4.0"
         assert diagnosis is None
+
+
+def test_self_healing_engine_run_without_context_manager() -> None:
+    """The engine can be used without a ``with`` block and still auto-manages the sandbox."""
+    engine = SelfHealingEngine(use_llm=False)
+
+    result, diagnosis = engine.run("print('no context manager')")
+
+    assert result.exit_code == 0
+    assert result.stdout.strip() == "no context manager"
+    assert diagnosis is None
+    assert not engine._sandbox.workspace_path.exists()

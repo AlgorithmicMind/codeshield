@@ -64,6 +64,11 @@ class SandboxManager:
         return self._workspace
 
     @property
+    def workspace_path(self) -> Path:
+        """Alias for the root sandbox workspace directory."""
+        return self._workspace
+
+    @property
     def venv_path(self) -> Path:
         """Return the virtual environment directory."""
         return self._venv_path
